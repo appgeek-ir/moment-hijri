@@ -12,13 +12,13 @@
 	/* global define */
 	if (typeof define === 'function' && define.amd) {
 		define(['moment'], function (moment) {
-			root.moment = factory(moment)
-			return root.moment
+			root.iMoment = factory(moment)
+			return root.iMoment
 		})
 	} else if (typeof exports === 'object') {
 		module.exports = factory(require('moment'))
 	} else {
-		root.moment = factory(root.moment)
+		root.iMoment = factory(root.moment)
 	}
 })(this, function (moment) { // jshint ignore:line
 
@@ -281,7 +281,11 @@
                       , 'Dhu-H'
                       ],
 		iMonthsShort: function (m) {
-			return this._iMonthsShort[m.iMonth()]
+			if (moment.isMoment(m)) {
+				return this._iMonthsShort[m.jMonth()]
+			} else {
+				return this._iMonthsShort;
+			}
 		}
 
 		,
@@ -563,6 +567,22 @@
   ************************************/
 
 	function makeMoment(input, format, lang, utc) {
+		if (isArray(input)) {
+			for (var i = input.length; i < 7; i++) {
+				if (i < 3) {
+					input[i] = 1;
+				} else {
+					input[i] = 0;
+				}
+			}
+			format = 'iYYYY/iM/iD HH:mm:ss';
+			input = leftZeroFill(input[0], 4) + '-'
+				+ leftZeroFill(input[1] + 1, 2) + '-'
+				+ leftZeroFill(input[2], 2) + ' '
+				+ leftZeroFill(input[3], 2) + ':'
+				+ leftZeroFill(input[4], 2) + ':'
+				+ leftZeroFill(input[5], 2)
+		}
 		var config =
 			{ _i: input
 			, _f: format
@@ -685,6 +705,17 @@
 			return toHijri(this.year(), this.month(), this.date()).hd
 		}
 	}
+
+    hMoment.fn.iDay = function (input) {
+		if (typeof input === 'number') {
+		} else {
+			var day = moment.fn.day.call(this, input) + 1;
+			if (day == 7) {
+				day = 0;
+			}
+			return day;
+		}
+    }
 
 	hMoment.fn.iDayOfYear = function (input) {
 		var dayOfYear = Math.round((hMoment(this).startOf('day') - hMoment(this).startOf('iYear')) / 864e5) + 1
